@@ -10,7 +10,7 @@ import {
 export class VisionIdentityCheckService {
   private readonly logger = new Logger(VisionIdentityCheckService.name);
 
-  async check(payload: IdentityCheckRequestDto): Promise<IdentityCheckResponseDto> {
+  check(payload: IdentityCheckRequestDto): IdentityCheckResponseDto {
     const selfie = this.toBuffer(payload.selfieBuffer);
     const document = this.toBuffer(payload.documentBuffer);
 
@@ -18,7 +18,9 @@ export class VisionIdentityCheckService {
     const faceMatch = faceScore >= 0.75;
     const isLive = this.evaluateLiveness(payload.metadata);
     const faceDetails = this.describeFaceMatch(faceScore, faceMatch);
-    const details = isLive ? 'Liveness confirmed' : 'Liveness could not be confirmed';
+    const details = isLive
+      ? 'Liveness confirmed'
+      : 'Liveness could not be confirmed';
     const overallScore = Number(
       Math.max(0, Math.min(1, faceScore * (isLive ? 1 : 0.85))).toFixed(2),
     );
@@ -62,7 +64,9 @@ export class VisionIdentityCheckService {
     return `Face difference is ${(1 - score) * 100}%`;
   }
 
-  private evaluateLiveness(metadata?: IdentityCheckRequestDto['metadata']): boolean {
+  private evaluateLiveness(
+    metadata?: IdentityCheckRequestDto['metadata'],
+  ): boolean {
     if (!metadata) return true;
     if (metadata.flagged) return false;
     if (metadata.movementDetected === false) return false;
