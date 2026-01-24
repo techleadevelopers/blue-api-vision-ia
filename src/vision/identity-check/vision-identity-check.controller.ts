@@ -1,6 +1,6 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { VisionIdentityCheckService } from './vision-identity-check.service';
-import {
+import type {
   IdentityCheckRequestDto,
   IdentityCheckResponseDto,
 } from './dto/identity-check.dto';
@@ -11,7 +11,7 @@ export class VisionIdentityCheckController {
 
   @Post()
   @HttpCode(HttpStatus.OK)
-  async check(@Body() payload: IdentityCheckRequestDto): Promise<IdentityCheckResponseDto> {
+  check(@Body() payload: IdentityCheckRequestDto): IdentityCheckResponseDto {
     return this.identityService.check(payload);
   }
 }
