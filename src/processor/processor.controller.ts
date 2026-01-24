@@ -1,10 +1,10 @@
-import { 
-  Controller, 
-  Post, 
-  UploadedFile, 
-  UseInterceptors, 
+import {
+  Controller,
+  Post,
+  UploadedFile,
+  UseInterceptors,
   BadRequestException,
-  Logger 
+  Logger,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ProcessorService } from './processor.service';
@@ -22,30 +22,41 @@ export class ProcessorController {
   @Post('process-avatar')
   @UseInterceptors(FileInterceptor('file'))
   async processAvatar(@UploadedFile() file: Express.Multer.File) {
-    this.logger.log(`[ProcessorController] Recebida solicitação de processamento para: ${file?.originalname}`);
+    this.logger.log(
+      `[ProcessorController] Recebida solicitação de processamento para: ${file?.originalname}`,
+    );
 
     if (!file || !file.buffer) {
-      throw new BadRequestException('Nenhum arquivo enviado ou buffer inválido.');
+      throw new BadRequestException(
+        'Nenhum arquivo enviado ou buffer inválido.',
+      );
     }
 
     try {
       // 1. Executa a IA (Remove.bg + Cloudinary)
-      const processed = await this.processorService.process(file.buffer, file.mimetype);
+      const processed = await this.processorService.process(
+        file.buffer,
+        file.mimetype,
+      );
 
       // 2. Faz o upload da imagem final tratada para o UploadThing
       const filename = `processed-${Date.now()}-${file.originalname}`;
       const result = await this.uploadService.uploadProcessedFile(
-        processed.buffer, 
-        filename, 
-        processed.mimeType
+        processed.buffer,
+        filename,
+        processed.mimeType,
       );
 
-      this.logger.log(`[ProcessorController] Processamento e upload concluídos: ${result.url}`);
-      
+      this.logger.log(
+        `[ProcessorController] Processamento e upload concluídos: ${result.url}`,
+      );
+
       // Retorna apenas a URL final, exatamente como o backend principal espera
       return { url: result.url };
-    } catch (error) {
-      this.logger.error(`[ProcessorController] Erro no pipeline: ${error.message}`);
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Erro desconhecido';
+      this.logger.error(`[ProcessorController] Erro no pipeline: ${message}`);
       throw new BadRequestException('Falha ao processar a imagem premium.');
     }
   }
