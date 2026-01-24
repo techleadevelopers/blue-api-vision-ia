@@ -1,6 +1,9 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { VisionOcrService } from './vision-ocr.service';
-import { DocumentOcrRequestDto, DocumentOcrResponseDto } from './dto/document-ocr.dto';
+import type {
+  DocumentOcrRequestDto,
+  DocumentOcrResponseDto,
+} from './dto/document-ocr.dto';
 
 @Controller('vision/ocr')
 export class VisionOcrController {
@@ -8,7 +11,9 @@ export class VisionOcrController {
 
   @Post()
   @HttpCode(HttpStatus.OK)
-  async extract(@Body() payload: DocumentOcrRequestDto): Promise<DocumentOcrResponseDto> {
+  async extract(
+    @Body() payload: DocumentOcrRequestDto,
+  ): Promise<DocumentOcrResponseDto> {
     return this.ocrService.extractFromDocument(payload);
   }
 }
