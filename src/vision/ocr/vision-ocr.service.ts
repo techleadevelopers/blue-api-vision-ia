@@ -1,44 +1,67 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { createWorker } from 'tesseract.js';
-import { DocumentOcrRequestDto, DocumentOcrResponseDto } from './dto/document-ocr.dto';
+import {
+  DocumentOcrRequestDto,
+  DocumentOcrResponseDto,
+} from './dto/document-ocr.dto';
 
 @Injectable()
 export class VisionOcrService {
   private readonly logger = new Logger(VisionOcrService.name);
 
-  async extractFromDocument(body: DocumentOcrRequestDto): Promise<DocumentOcrResponseDto> {
+  async extractFromDocument(
+    body: DocumentOcrRequestDto,
+  ): Promise<DocumentOcrResponseDto> {
     const buffer = this.toBuffer(body.buffer);
     try {
-      const { text, confidence, rawResult } = await this.recognizeText(buffer);
+      const ocrResult = await this.recognizeText(buffer);
       return {
-        extractedText: text,
-        confidence,
-        rawResult,
+        extractedText: ocrResult.text,
+        confidence: ocrResult.confidence,
+        rawResult: ocrResult.rawResult,
       };
     } catch (error) {
       this.logger.error('Erro ao interpretar o documento', error);
-      throw new InternalServerErrorException('Nao foi possivel extrair os dados do documento');
+      throw new InternalServerErrorException(
+        'Nao foi possivel extrair os dados do documento',
+      );
     }
   }
 
   private async recognizeText(buffer: Buffer): Promise<{
     text: string;
     confidence: number;
-    rawResult: any;
+    rawResult: unknown;
   }> {
-    const worker = await createWorker({
-      logger: ({ status, progress }) =>
-        this.logger.debug(`OCR ${status} ${Math.round((progress ?? 0) * 100)}%`),
-    });
+    type CreateWorkerOptions = Parameters<typeof createWorker>[2];
+    type LoggerPayload = { status: string; progress?: number };
+    type ExtendedWorker = Awaited<ReturnType<typeof createWorker>> & {
+      loadLanguage(lang: string): Promise<void>;
+      initialize(lang: string): Promise<void>;
+    };
+
+    const worker = (await createWorker([], undefined, {
+      logger: ({ status, progress }: LoggerPayload) =>
+        this.logger.debug(
+          `OCR ${status} ${Math.round((progress ?? 0) * 100)}%`,
+        ),
+    } as CreateWorkerOptions)) as ExtendedWorker;
 
     try {
       await worker.load();
       await worker.loadLanguage('por');
       await worker.initialize('por');
-      const { data } = await worker.recognize(buffer);
-      const confidence = this.normalizeConfidence(data.confidence ?? 0);
+      const recognizeResult = await worker.recognize(buffer);
+      const { data } = recognizeResult;
+      const confidence = this.normalizeConfidence(
+        (data as { confidence?: number }).confidence ?? 0,
+      );
       return {
-        text: (data.text ?? '').trim(),
+        text: ((data as { text?: string }).text ?? '').trim(),
         confidence,
         rawResult: data,
       };
