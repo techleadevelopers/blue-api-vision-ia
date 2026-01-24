@@ -1,98 +1,59 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 🔵 Blue API Vision IA
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Este repositório expõe uma API NestJS leve pensada para funcionar como um complemento especializado ao backend principal. O foco está em orquestrar processamentos de imagem (Remove.bg + Cloudinary), upload final em UploadThing, OCR documentário e checagem de identidade com liveness e face match “auditados” para a integração com o Prisma do core.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Arquitetura geral
 
-## Description
+- **Entrypoint:** o bootstrap em `src/main.ts:1` habilita CORS, limita JSON/URL-encoded a `10 MB`, e usa `process.env.PORT || 3001` para escutar (sem contar com body parsers), garantindo compatibilidade com uploads pesados.
+- **Módulo raiz:** `src/app.module.ts:1` importa o pipeline tradicional (`ProcessorModule`, `StorageModule`) junto com os dois módulos de visão (`VisionOcrModule`, `VisionIdentityCheckModule`) para registrar todas as rotas do `/vision`.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Módulos e rotas expostas
 
-## Project setup
+### 1. Processor pipeline (`/vision/process-avatar`)
+- `ProcessorController` (`src/processor/processor.controller.ts:1`) recebe o `multipart/form-data`, valida o buffer e invoca o `ProcessorService` para aplicar a IA premium antes de mandar para o `UploadService`.
+- `ProcessorService` (`src/processor/processor.service.ts:1`) ainda está em branco e precisa encapsular as chamadas ao Remove.bg, Cloudinary e quaisquer regras de transformação. Sem essa implementação, o upload final fica inviável.
 
-```bash
-$ npm install
-```
+### 2. Storage (`/upload/...` ou internal)
+- `StorageModule` (`src/storage/storage.module.ts:1`) registra o `UploadService` e o exporta para uso por outros módulos, como o processor.
+- `UploadService` (`src/storage/upload.service.ts:1`) conversa com o `UTApi` do UploadThing: constrói um `Blob` a partir do `Buffer`, envia, extrai a URL (com fallback para `utfs.io`) e lança exceções amigáveis. O arquivo `src/upload/upload.controller.ts` está referenciado na importação mas não existe — essa rota precisa ser criada para completar o módulo.
 
-## Compile and run the project
+### 3. Vision OCR (`/vision/ocr`)
+- `VisionOcrModule` desempenha a extração textual com `tesseract.js` (`package.json:21`) por meio de `VisionOcrService` (`src/vision/ocr/vision-ocr.service.ts:9`).
+- A rota `/vision/ocr` aceita um `buffer` base64 pelo DTO (`src/vision/ocr/dto/document-ocr.dto.ts:1`), executa OCR em português e retorna exatamente `{ extractedText, confidence, rawResult }` para que o backend principal consuma sem adaptação.
+- A normalização de confiança vai para o intervalo `[0,1]`, e o raw result (JSON bruto do Tesseract) é mantido como payload auxiliar.
 
-```bash
-# development
-$ npm run start
+### 4. Vision Identity Check (`/vision/identity-check`)
+- `VisionIdentityCheckModule` (`src/vision/identity-check/vision-identity-check.module.ts:1`) expõe `/vision/identity-check` via `VisionIdentityCheckController` (`src/vision/identity-check/vision-identity-check.controller.ts:1`).
+- O serviço (`src/vision/identity-check/vision-identity-check.service.ts:13`) transforma selfie e documento em hashes SHA-256, calcula uma pontuação normalizada e aplica heurísticas simples de liveness.
+- A resposta segue o contrato exigido: `{ isLive, score, details?, faceComparison: { match, score, details? } }` (veja DTO em `src/vision/identity-check/dto/identity-check.dto.ts:1`), pronto para alimentar o `prisma.provider.update`.
 
-# watch mode
-$ npm run start:dev
+## Configuração e variáveis de ambiente
 
-# production mode
-$ npm run start:prod
-```
+- As variáveis esperadas estão centralizadas em `src/config/env.config.ts:1`: `REMOVE_BG_API_KEY`, `UPLOADTHING_TOKEN`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` e `PORT`. Elas devem ser definidas no `.env` antes de rodar o app.
+- O mesmo arquivo já expõe `PORT` com default `3001`, alinhando-se ao `main` e permitindo `process.env.PORT` no deploy.
 
-## Run tests
+## Desenvolvimento
 
-```bash
-# unit tests
-$ npm run test
+1. Instale dependências: `npm install`.
+2. Ajuste `.env` com as chaves acima.
+3. Rode em modo watch: `npm run start:dev`.
+4. Para produção, `npm run build` seguido de `npm run start:prod`.
+5. Scripts auxiliares:
+   - `npm run lint`
+   - `npm run test` (estrutural)
+   - `npm run test:e2e`
+   - `npm run test:cov`
 
-# e2e tests
-$ npm run test:e2e
+## Auditoria e próximos passos
 
-# test coverage
-$ npm run test:cov
-```
+- **ProcessorService ausente:** Sem lógica no arquivo `src/processor/processor.service.ts:1`, o fluxo de IA não está operacional. Defina aí a integração Remove.bg + Cloudinary + normalização antes de confiar no upload final.
+- **UploadController faltante:** `StorageModule` importa `./upload/upload.controller` mas esse arquivo não existe. Crie-o com endpoints CRUD ou remoção, conforme o core exigir, para que o módulo compile corretamente.
+- **Lógica facial simulada:** O `VisionIdentityCheckService` usa hashes e heurísticas estáticas. Troque rapidamente pelos provedores oficiais (Google Vision, BioID, etc.) para evitar falsos negativos/positivos antes de ir à produção.
+- **Documentação de retorno:** os formatos JSON retornados pelas rotas `/vision/ocr` e `/vision/identity-check` já seguem o contrato do Prisma, mas vale adicionar testes de contrato para prevenir regressões.
 
-## Deployment
+## Implantação
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+- Garanta variáveis no ambiente de produção.
+- Use `npm run build` e execute `node dist/main` (ou `npm run start:prod`).
+- A porta padrão é 3001, e CORS + limites de payload já estão ativos (`src/main.ts:1`).
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
