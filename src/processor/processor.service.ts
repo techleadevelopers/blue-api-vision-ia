@@ -1,6 +1,6 @@
 import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
 import axios from 'axios';
-import * as FormData from 'form-data';
+import FormData from 'form-data';
 import { v2 as cloudinary } from 'cloudinary';
 import { ENV } from '../config/env.config'; // Garante o uso das suas chaves
 
