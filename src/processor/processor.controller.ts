@@ -59,7 +59,6 @@ export class ProcessorController {
       const message =
         error instanceof Error ? error.message : 'Erro desconhecido';
       this.logger.error(`[ProcessorController] Erro no pipeline: ${message}`);
-      
       // Lança erro amigável para o backend principal tratar
       throw new BadRequestException('Falha ao processar a imagem premium.');
     }
