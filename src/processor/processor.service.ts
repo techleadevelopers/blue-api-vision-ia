@@ -14,6 +14,7 @@ export class ProcessorService {
   private readonly logger = new Logger(ProcessorService.name);
 
   constructor() {
+    // Inicializa o Cloudinary com as credenciais validadas
     cloudinary.config({
       cloud_name: ENV.CLOUDINARY.CLOUD_NAME,
       api_key: ENV.CLOUDINARY.API_KEY,
@@ -22,30 +23,31 @@ export class ProcessorService {
   }
 
   /**
-   * Pipeline Premium: Remove o fundo e aplica o cenário Studio Soft
+   * Pipeline Premium: Remove o fundo original e aplica o cenário "Studio Soft" clean.
+   *
    */
   async process(buffer: Buffer, mimeType: string): Promise<ProcessedImage> {
     this.logger.debug('Iniciando pipeline de processamento Premium');
 
     try {
-      // 1. Remoção de Fundo via Remove.bg (Mantém transparência)
+      // 1. Remoção de Fundo via Remove.bg para garantir recorte limpo
       const bgRemovedBuffer = await this.removeBackground(buffer);
 
-      // 2. Composição com o cenário "Studio Soft" via Cloudinary
+      // 2. Composição com o cenário estático clean via Cloudinary
       const processedUrl = await this.applyStudioBackground(bgRemovedBuffer);
 
-      // 3. Download da imagem final para o buffer
+      // 3. Download da imagem final tratada
       const finalResponse = await axios.get(processedUrl, { responseType: 'arraybuffer' });
       
       this.logger.log('Imagem processada com sucesso no padrão Studio Soft');
       
       return {
         buffer: Buffer.from(finalResponse.data),
-        mimeType: 'image/jpeg', // JPEG é mais leve para renderização mobile
+        mimeType: 'image/jpeg', // JPEG para melhor performance mobile
       };
     } catch (error: any) {
       this.logger.error(`Falha no pipeline IA: ${error.message}`);
-      // Fallback: Devolve a original para não travar o fluxo do usuário
+      // Fallback seguro para não interromper o cadastro do prestador
       return { buffer, mimeType };
     }
   }
@@ -71,15 +73,17 @@ export class ProcessorService {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder: 'provider_avatars_processed',
-          // A mágica acontece aqui: usamos a imagem da cozinha como camada de baixo (underlay)
           transformation: [
-            // Foca no rosto e corta em 800x800
+            // Foca no rosto para garantir enquadramento de perfil
             { width: 800, height: 800, crop: 'thumb', gravity: 'face' },
-            // Aplica a imagem de fundo que você subiu (bg_studio_limpeja_yimv2f)
-            { underlay: 'bg_studio_limpeja_yimv2f' },
-            // Ajusta o fundo para preencher o quadrado e suaviza a borda do recorte
+            
+            // Aplica o fundo clean de cortina/armário (ID: bg_studio_limpeja_fyrsgu)
+            { underlay: 'bg_studio_limpeja_fyrsgu' },
+            
+            // Ajusta a sobreposição e suaviza bordas para evitar aspecto de "IA fake"
             { width: 800, height: 800, crop: 'fill', flags: 'layer_apply' },
-            // Otimização final
+            
+            // Otimização de entrega
             { fetch_format: 'jpg', quality: 'auto' }
           ],
         },
