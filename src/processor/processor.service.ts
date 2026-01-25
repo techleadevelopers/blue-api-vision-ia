@@ -14,7 +14,6 @@ export class ProcessorService {
   private readonly logger = new Logger(ProcessorService.name);
 
   constructor() {
-    // Inicializa o Cloudinary com as credenciais validadas
     cloudinary.config({
       cloud_name: ENV.CLOUDINARY.CLOUD_NAME,
       api_key: ENV.CLOUDINARY.API_KEY,
@@ -23,31 +22,30 @@ export class ProcessorService {
   }
 
   /**
-   * Pipeline Premium: Remove o fundo original e aplica o cenário "Studio Soft" clean.
-   *
+   * Pipeline Premium: Remove o fundo original e injeta o cenário Studio LimpeJá.
    */
   async process(buffer: Buffer, mimeType: string): Promise<ProcessedImage> {
     this.logger.debug('Iniciando pipeline de processamento Premium');
 
     try {
-      // 1. Remoção de Fundo via Remove.bg para garantir recorte limpo
+      // 1. Remoção de Fundo via Remove.bg para recorte cirúrgico
       const bgRemovedBuffer = await this.removeBackground(buffer);
 
-      // 2. Composição com o cenário estático clean via Cloudinary
+      // 2. Composição com o novo cenário (bg_studio_limpeja_ndopjs) via Cloudinary
       const processedUrl = await this.applyStudioBackground(bgRemovedBuffer);
 
       // 3. Download da imagem final tratada
       const finalResponse = await axios.get(processedUrl, { responseType: 'arraybuffer' });
       
-      this.logger.log('Imagem processada com sucesso no padrão Studio Soft');
+      this.logger.log('Avatar "Premiumizado" com sucesso no cenário Studio LimpeJá');
       
       return {
         buffer: Buffer.from(finalResponse.data),
-        mimeType: 'image/jpeg', // JPEG para melhor performance mobile
+        mimeType: 'image/jpeg',
       };
     } catch (error: any) {
       this.logger.error(`Falha no pipeline IA: ${error.message}`);
-      // Fallback seguro para não interromper o cadastro do prestador
+      // Fallback: mantém a foto original se a IA falhar
       return { buffer, mimeType };
     }
   }
@@ -74,16 +72,16 @@ export class ProcessorService {
         {
           folder: 'provider_avatars_processed',
           transformation: [
-            // Foca no rosto para garantir enquadramento de perfil
+            // Foca no rosto para enquadramento perfeito de perfil
             { width: 800, height: 800, crop: 'thumb', gravity: 'face' },
             
-            // Aplica o fundo clean de cortina/armário (ID: bg_studio_limpeja_fyrsgu)
-            { underlay: 'bg_studio_limpeja_fyrsgu' },
+            // ✅ AQUI A MÁGICA: Injeta o novo fundo de cortina branca
+            { underlay: 'bg_studio_limpeja_ndopjs' },
             
-            // Ajusta a sobreposição e suaviza bordas para evitar aspecto de "IA fake"
+            // Mescla as camadas e suaviza bordas
             { width: 800, height: 800, crop: 'fill', flags: 'layer_apply' },
             
-            // Otimização de entrega
+            // Otimização final para Web/Mobile
             { fetch_format: 'jpg', quality: 'auto' }
           ],
         },
