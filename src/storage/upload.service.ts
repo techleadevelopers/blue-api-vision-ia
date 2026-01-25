@@ -4,8 +4,7 @@ import { UTApi, UTFile } from 'uploadthing/server';
 @Injectable()
 export class UploadService {
   private readonly logger = new Logger(UploadService.name);
-  
-  // Certifique-se de que o token no Railway não tenha aspas (") ou barras (\) extras
+  // Garanta que o token no Railway não tenha aspas extras
   private readonly utapi = new UTApi({ token: process.env.UPLOADTHING_TOKEN });
 
   async uploadProcessedFile(
@@ -16,34 +15,35 @@ export class UploadService {
     try {
       this.logger.log(`[Vision-Upload] Enviando para UploadThing: ${filename}`);
 
-      // Converte o buffer para o formato aceito pelo UTFile
       const fileData = new Uint8Array(buffer);
       const utFile = new UTFile([fileData], filename, {
         type: contentType,
       });
 
-      // Realiza o upload
-      const result = await this.utapi.uploadFiles(utFile);
+      // O retorno do uploadFiles mudou na v7+
+      const response = await this.utapi.uploadFiles(utFile);
       
-      // A resposta do UploadThing v7+ vem em um array de objetos { data, error }
-      const uploadResults = Array.isArray(result) ? result : [result];
-      const firstResult = uploadResults[0];
+      // O UploadThing retorna um array mesmo para arquivo único
+      const result = Array.isArray(response) ? response[0] : response;
 
-      if (!firstResult || firstResult.error) {
-        const errorMsg = firstResult?.error?.message || 'Erro desconhecido no UploadThing';
+      if (!result || result.error) {
+        const errorMsg = result?.error?.message || 'Erro desconhecido no UploadThing';
         throw new Error(errorMsg);
       }
 
-      // IMPORTANTE: Use ufsUrl conforme sugerido nos logs de depreciação
-      // Fallback para montar a URL manualmente caso o campo novo não venha
-      const url = firstResult.data?.ufsUrl || 
-                  (firstResult.data?.key ? `https://utfs.io/f/${firstResult.data.key}` : undefined);
+      // CORREÇÃO CRÍTICA: Usar ufsUrl conforme o log de depreciação sugeriu
+      const url = result.data?.ufsUrl;
 
       if (!url) {
-        throw new Error('Falha ao obter URL do UploadThing (data.ufsUrl é undefined)');
+        // Fallback manual caso a rede ufs demore a propagar
+        const fallbackUrl = result.data?.key ? `https://utfs.io/f/${result.data.key}` : undefined;
+        if (!fallbackUrl) throw new Error('Falha ao obter URL final (ufsUrl/key undefined)');
+        
+        this.logger.warn(`[Vision-Upload] ufsUrl não disponível, usando fallback por key.`);
+        return { url: fallbackUrl };
       }
 
-      this.logger.log(`[Vision-Upload] Sucesso! URL obtida: ${url}`);
+      this.logger.log(`[Vision-Upload] Upload concluído com sucesso: ${url}`);
       return { url };
 
     } catch (error: unknown) {
