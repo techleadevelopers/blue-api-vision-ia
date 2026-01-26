@@ -47,12 +47,15 @@ export class ProcessorService {
   /**
    * Ajuste Fino Manual:
    * Remove uma porcentagem da base para elevar o posicionamento do rosto no card.
-   * Ideal para fotos tiradas de muito longe.
+   * Utiliza escala decimal (float) para evitar erros de transformação no Cloudinary.
    */
   async processWithManualAdjustment(buffer: Buffer, verticalCutPct: number): Promise<ProcessedImage> {
     this.logger.debug(`Executando ajuste manual: Cortando ${verticalCutPct}% da base para elevar o rosto.`);
 
     try {
+      // Cálculo da escala decimal (ex: 10% de corte na base mantém 0.9 da altura do topo)
+      const heightScale = (100 - verticalCutPct) / 100;
+
       return new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
           {
@@ -60,12 +63,12 @@ export class ProcessorService {
             transformation: [
               /**
                * 1. CORTA A BASE (Vertical Crop)
-               * Removemos a porcentagem da parte de baixo para forçar o enquadramento a subir.
-               * gravity: 'north' garante que o corte comece de baixo para cima.
+               * Usamos decimais (ex: 0.9) para garantir que o Cloudinary entenda como % da imagem original.
+               * gravity: 'north' mantém o topo e corta o que sobra embaixo.
                */
               { 
-                height: `${100 - verticalCutPct}`, 
-                width: "1.0", 
+                height: heightScale, 
+                width: 1.0, 
                 crop: "crop", 
                 gravity: "north" 
               },
@@ -73,7 +76,7 @@ export class ProcessorService {
               // 2. PADRONIZAÇÃO 3x4 FINAL
               { width: 800, height: 1000, crop: "fill" },
 
-              // 3. TRATAMENTO DE IMAGEM (Mantém o padrão visual)
+              // 3. TRATAMENTO DE IMAGEM (Consistência com o automático)
               { effect: "improve:indoor" },
               { effect: "gamma:20" },
               { effect: "warm:10" },
@@ -82,13 +85,20 @@ export class ProcessorService {
             ],
           },
           async (error, result) => {
-            if (error) return reject(error);
+            if (error) {
+              this.logger.error(`Erro detalhado Cloudinary: ${error.message}`);
+              return reject(error);
+            }
             
-            const response = await axios.get(result!.secure_url, { responseType: 'arraybuffer' });
-            resolve({
-              buffer: Buffer.from(response.data),
-              mimeType: 'image/jpeg',
-            });
+            try {
+              const response = await axios.get(result!.secure_url, { responseType: 'arraybuffer' });
+              resolve({
+                buffer: Buffer.from(response.data),
+                mimeType: 'image/jpeg',
+              });
+            } catch (axiosError) {
+              reject(axiosError);
+            }
           },
         );
 
