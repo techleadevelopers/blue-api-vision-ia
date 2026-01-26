@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
-import FormData from 'form-data';
 import { v2 as cloudinary } from 'cloudinary';
 import { ENV } from '../config/env.config';
 
@@ -22,96 +21,75 @@ export class ProcessorService {
   }
 
   /**
-   * Pipeline Premium: 
-   * 1. Remove fundo.
-   * 2. Normaliza brilho/contraste.
-   * 3. Harmoniza temperatura de cor.
-   * 4. Enquadramento inteligente (Face Crop 40%).
-   * 5. Injeta cenário Studio.
+   * Pipeline Identidade Real (Padrão 3x4):
+   * 1. Ignora o remove.bg para manter a naturalidade (evita o "vale da estranheza").
+   * 2. Enquadramento inteligente focado no rosto (Zoom 0.65).
+   * 3. Limpeza de iluminação (Auto-Improve) para branquear o fundo real.
+   * 4. Harmonização de cores para tom de pele profissional.
    */
   async process(buffer: Buffer, mimeType: string): Promise<ProcessedImage> {
-    this.logger.debug('Iniciando pipeline de processamento Premium com IA de Imagem');
+    this.logger.debug('Iniciando pipeline de processamento Real Background (Padrão 3x4)');
 
     try {
-      // 1. Remoção de Fundo via Remove.bg para recorte cirúrgico
-      const bgRemovedBuffer = await this.removeBackground(buffer);
+      /**
+       * 1. Enviamos o buffer original direto para o Cloudinary.
+       * Não usamos mais o remove.bg para evitar que a foto pareça "colada".
+       */
+      const processedUrl = await this.enhanceRealPhoto(buffer);
 
-      // 2. Composição, Enquadramento e Tratamento de Luz via Cloudinary
-      const processedUrl = await this.applyStudioBackground(bgRemovedBuffer);
-
-      // 3. Download da imagem final tratada
+      // 2. Download da imagem final tratada
       const finalResponse = await axios.get(processedUrl, { responseType: 'arraybuffer' });
       
-      this.logger.log('Avatar "Premiumizado" e Harmonizado com sucesso no cenário Studio LimpeJá');
+      this.logger.log('Avatar processado com sucesso: Padrão Real 3x4 aplicado.');
       
       return {
         buffer: Buffer.from(finalResponse.data),
         mimeType: 'image/jpeg',
       };
     } catch (error: any) {
-      this.logger.error(`Falha no pipeline IA: ${error.message}`);
-      // Fallback: mantém a foto original se a IA falhar
+      this.logger.error(`Falha no pipeline de imagem: ${error.message}`);
+      // Fallback: se a IA falhar por qualquer motivo, mantém o original para não travar o cadastro
       return { buffer, mimeType };
     }
   }
 
-  private async removeBackground(buffer: Buffer): Promise<Buffer> {
-    const formData = new FormData();
-    formData.append('size', 'auto');
-    formData.append('image_file', buffer);
-
-    const response = await axios.post('https://api.remove.bg/v1.0/removebg', formData, {
-      headers: {
-        ...formData.getHeaders(),
-        'X-Api-Key': ENV.REMOVE_BG_API_KEY, 
-      },
-      responseType: 'arraybuffer',
-    });
-
-    return Buffer.from(response.data);
-  }
-
-  private async applyStudioBackground(imageBuffer: Buffer): Promise<string> {
+  private async enhanceRealPhoto(imageBuffer: Buffer): Promise<string> {
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder: 'provider_avatars_processed',
           transformation: [
             /**
-             * 1. ENQUADRAMENTO INTELIGENTE (Face Crop)
-             * g_face: foca no rosto. 
-             * zoom: 0.65 afasta a "câmera" para que o rosto ocupe aprox. 40% da área, 
-             * resolvendo o problema de fotos muito perto (Luciene).
+             * 1. ENQUADRAMENTO PROFISSIONAL (3x4)
+             * g_face: Centraliza no rosto.
+             * zoom: 0.65: Garante que os ombros apareçam, criando o aspecto de crachá corporativo.
              */
-            { width: 800, height: 800, crop: 'thumb', gravity: 'face', zoom: 0.65 },
+            { width: 800, height: 1000, crop: 'thumb', gravity: 'face', zoom: 0.65 },
 
             /**
-             * 2. NORMALIZAÇÃO DE LUZ (Auto-Improve)
-             * improve: ajusta automaticamente brilho e contraste.
-             * gamma:20: clareia sombras de fotos escuras (Mariana).
+             * 2. TRATAMENTO DE LUZ E FUNDO REAL
+             * improve:indoor: Detecta a parede branca ao fundo e aumenta a exposição.
+             * gamma:20: Remove tons amarelados de luz de lâmpada comum.
              */
             { effect: "improve:indoor" },
             { effect: "gamma:20" },
 
             /**
-             * 3. HARMONIZAÇÃO DE CORES
-             * warm:10: dá um tom levemente aquecido para todas as peles.
-             * vibrance:20: deixa as cores mais vivas sem estourar.
+             * 3. HARMONIZAÇÃO DE COR
+             * warm:10: Dá um tom de saúde para a pele.
+             * vibrance:20: Deixa a foto mais "viva" e nítida.
              */
             { effect: "vibrance:20" },
             { effect: "warm:10" },
 
             /**
-             * 4. INJEÇÃO DO CENÁRIO STUDIO
-             * underlay: coloca o fundo de cortina branca por trás do recorte.
+             * 4. NITIDEZ E ACABAMENTO
+             * e_sharpen: Garante que os olhos e detalhes do rosto fiquem nítidos no app.
              */
-            { underlay: 'bg_studio_limpeja_ndopjs' },
-            
-            // Mescla as camadas e garante o preenchimento final
-            { width: 800, height: 800, crop: 'fill', flags: 'layer_apply' },
+            { effect: "sharpen:100" },
 
             /**
-             * 5. OTIMIZAÇÃO FINAL
+             * 5. FORMATO FINAL
              */
             { fetch_format: 'jpg', quality: 'auto:good' }
           ],
