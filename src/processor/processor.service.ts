@@ -76,10 +76,10 @@ export class ProcessorService {
               // 2. PADRONIZAÇÃO 3x4 FINAL
               { width: 800, height: 1000, crop: "fill" },
 
-              // 3. TRATAMENTO DE IMAGEM (Consistência com o automático)
+              // 3. TRATAMENTO DE IMAGEM (Removido 'warm' que causava erro)
               { effect: "improve:indoor" },
               { effect: "gamma:20" },
-              { effect: "warm:10" },
+              { effect: "vibrance:30" }, 
               { effect: "sharpen:100" },
               { fetch_format: 'jpg', quality: 'auto:good' }
             ],
@@ -123,12 +123,11 @@ export class ProcessorService {
             { width: 800, height: 1000, crop: 'thumb', gravity: 'face', zoom: 0.65 },
 
             /**
-             * 2. TRATAMENTO DE LUZ E COR
+             * 2. TRATAMENTO DE LUZ E COR (Ajustado para evitar efeitos inválidos)
              */
             { effect: "improve:indoor" },
             { effect: "gamma:20" },
-            { effect: "vibrance:20" },
-            { effect: "warm:10" },
+            { effect: "vibrance:25" },
             { effect: "sharpen:100" },
 
             /**
