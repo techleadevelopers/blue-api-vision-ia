@@ -66,18 +66,22 @@ export class ClipforgeService implements OnModuleInit, OnModuleDestroy {
   }
 
   async generate(request: GenerateRequestDto): Promise<ContentJob> {
+    const accounts = await this.repository.listAccounts();
+    const accountId = request.accountId || accounts[0]?.id || 'demo-account';
+    const themeId = request.themeId;
+
     const payload = {
       hook: request.hook,
       template: request.template,
       voice: request.voice,
-      themeId: request.themeId,
-      accountId: request.accountId,
+      themeId,
+      accountId,
       extras: request.extras,
     };
 
     const job = await this.repository.createJob({
-      accountId: request.accountId,
-      themeId: request.themeId,
+      accountId,
+      themeId,
       payload,
       status: JobStatus.CREATED,
       step: 'script.generate',
