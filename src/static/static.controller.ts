@@ -13,6 +13,15 @@ export class StaticController {
     );
   }
 
+  // Suporta barra final que alguns validadores adicionam
+  @Get('tiktok9DJJtMAHBJYGN75iA8AnT163uOLbWa7f.txt/')
+  getTikTokVerificationSlash(@Res() res: Response) {
+    res.type('text/plain');
+    return res.send(
+      'tiktok-developers-site-verification=9DJJtMAHBJYGN75iA8AnT163uOLbWa7f',
+    );
+  }
+
   @Get('terms')
   getTerms(@Res() res: Response) {
     return res.sendFile(join(__dirname, '..', 'static', 'terms.html'));
