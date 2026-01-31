@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum JobStatus {
+  CREATED
+  SCRIPT_READY
+  TTS_READY
+  RENDER_READY
+  READY_TO_POST_MANUAL
+  PUBLISHED
+  FAILED
+}
+
+model Theme {
+  id             String   @id @default(uuid())
+  name           String
+  niche          String?
+  avatar         String?
+  promise        String?
+  hooks          String[]
+  ctas           String[]
+  voices         String[]
+  templates      String[]
+  forbiddenWords String[]
+  rules          Json?
+  jobs           ContentJob[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([createdAt])
+}
+
+model Account {
+  id        String   @id @default(uuid())
+  name      String
+  platform  String
+  status    String
+  config    Json?
+  jobs      ContentJob[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
+}
+
+model ContentJob {
+  id        String    @id @default(uuid())
+  accountId String
+  themeId   String
+  step      String?
+  status    JobStatus @default(CREATED)
+  payload   Json?
+  error     String?
+  attempts  Int       @default(0)
+  post      Post?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  account Account @relation(fields: [accountId], references: [id])
+  theme   Theme   @relation(fields: [themeId], references: [id])
+
+  @@index([accountId, createdAt])
+  @@index([themeId, createdAt])
+  @@index([status, createdAt])
+}
+
+model Post {
+  id             String            @id @default(uuid())
+  jobId          String            @unique
+  platformPostId String?
+  url            String?
+  caption        String?
+  publishedAt    DateTime?
+  status         String?
+  job            ContentJob        @relation(fields: [jobId], references: [id])
+  insights       InsightSnapshot[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+}
+
+model InsightSnapshot {
+  id         String   @id @default(uuid())
+  postId     String
+  capturedAt DateTime @default(now())
+  views      Int      @default(0)
+  likes      Int      @default(0)
+  comments   Int      @default(0)
+  shares     Int      @default(0)
+  score      Float?
+  post       Post     @relation(fields: [postId], references: [id])
+
+  @@index([postId, capturedAt])
+}
