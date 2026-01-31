@@ -1,16 +1,19 @@
-import { Process, Processor } from '@nestjs/bullmq';
+import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { CLIPFORGE_QUEUES } from '../queues/clipforge.queues';
 import { ClipforgeService } from '../clipforge.service';
 import { JobStatus } from '../domain/job/job.model';
 import { ENV } from '../../../config/env.config';
 
-@Processor(CLIPFORGE_QUEUES.SCRIPT_GENERATE)
-export class ScriptWorker {
-  constructor(private readonly clipforge: ClipforgeService) {}
+@Processor(CLIPFORGE_QUEUES.SCRIPT_GENERATE, {
+  concurrency: ENV.CLIPFORGE_CONCURRENCY.SCRIPT,
+})
+export class ScriptWorker extends WorkerHost {
+  constructor(private readonly clipforge: ClipforgeService) {
+    super();
+  }
 
-  @Process({ name: 'script.generate', concurrency: ENV.CLIPFORGE_CONCURRENCY.SCRIPT })
-  async handle(job: Job<{ jobId: string; payload: Record<string, unknown> }>) {
+  async process(job: Job<{ jobId: string; payload: Record<string, unknown> }>) {
     try {
       // TODO: gerar script com LLM/templating usando payload/theme
       await this.clipforge.markStatus(job.data.jobId, JobStatus.SCRIPT_READY, 'script.ready');
