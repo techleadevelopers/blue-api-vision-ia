@@ -10,6 +10,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { StaticController } from './static/static.controller';
+import { AppInfoController } from './app-info.controller';
 
 @Module({
   imports: [
@@ -62,7 +63,7 @@ import { StaticController } from './static/static.controller';
     ClipforgeModule,
     AuthModule,
   ],
-  controllers: [AppController, StaticController],
+  controllers: [AppController, StaticController, AppInfoController],
   providers: [AppService],
 })
 export class AppModule {}
