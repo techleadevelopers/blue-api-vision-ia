@@ -8,8 +8,50 @@ import { InsightSnapshot } from './insight/insight.model';
 const now = () => new Date();
 
 export class InMemoryClipforgeRepository implements ClipforgeRepository {
-  private themes: Theme[] = [];
-  private accounts: Account[] = [];
+  private themes: Theme[] = [
+    {
+      id: crypto.randomUUID(),
+      name: 'Finanças Rápidas',
+      niche: 'finanças pessoais',
+      avatar: '💰',
+      promise: 'Clareza financeira em 60s',
+      hooks: ['Pare de perder dinheiro no banco', '3 erros que te fazem pobre'],
+      ctas: ['Salve para aplicar hoje', 'Compartilhe com quem precisa'],
+      voices: ['masculina_calma', 'feminina_energetica'],
+      templates: ['quadros_slide', 'facecam_com_overlay'],
+      forbiddenWords: ['garantia', 'enriqueça rápido'],
+      rules: { tone: 'didático direto', duration: '45s' },
+      createdAt: now(),
+      updatedAt: now(),
+    },
+    {
+      id: crypto.randomUUID(),
+      name: 'Saúde & Lifestyle',
+      niche: 'bem-estar',
+      avatar: '🌿',
+      promise: 'Hábitos simples para viver melhor',
+      hooks: ['1 hábito noturno muda seu dia', 'A vitamina que você esquece'],
+      ctas: ['Teste por 7 dias', 'Marca um amigo que precisa'],
+      voices: ['neutra_suave'],
+      templates: ['broll_rapid', 'checklist_vertical'],
+      forbiddenWords: ['cura', 'garantia médica'],
+      rules: { tone: 'leve', duration: '40s' },
+      createdAt: now(),
+      updatedAt: now(),
+    },
+  ];
+
+  private accounts: Account[] = [
+    {
+      id: 'demo-account',
+      name: 'Conta Demo',
+      platform: 'tiktok',
+      status: 'active',
+      config: {},
+      createdAt: now(),
+      updatedAt: now(),
+    },
+  ];
   private jobs: ContentJob[] = [];
   private posts: Post[] = [];
   private insights: InsightSnapshot[] = [];
