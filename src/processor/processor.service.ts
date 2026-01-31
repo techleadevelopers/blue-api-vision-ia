@@ -21,39 +21,45 @@ export class ProcessorService {
   }
 
   /**
-   * Pipeline Identidade Real (Padrão 3x4):
-   * Fluxo automático para novos cadastros.
+   * ===============================
+   * 🟦 AVATAR PÚBLICO (VITRINE)
+   * Formato 1:1 – Marketplace Premium
+   * ===============================
    */
   async process(buffer: Buffer, mimeType: string): Promise<ProcessedImage> {
-    this.logger.debug('Iniciando pipeline de processamento Real Background (Padrão 3x4)');
+    this.logger.debug('Iniciando pipeline AVATAR PÚBLICO (1:1 – vitrine)');
 
     try {
-      const processedUrl = await this.enhanceRealPhoto(buffer);
+      const processedUrl = await this.enhancePublicAvatar(buffer);
+      const response = await axios.get(processedUrl, { responseType: 'arraybuffer' });
 
-      const finalResponse = await axios.get(processedUrl, { responseType: 'arraybuffer' });
-      
-      this.logger.log('Avatar processado com sucesso: Padrão Real 3x4 aplicado.');
-      
+      this.logger.log('Avatar público processado com sucesso (1:1).');
+
       return {
-        buffer: Buffer.from(finalResponse.data),
+        buffer: Buffer.from(response.data),
         mimeType: 'image/jpeg',
       };
     } catch (error: any) {
-      this.logger.error(`Falha no pipeline de imagem: ${error.message}`);
+      this.logger.error(`Falha no pipeline público: ${error.message}`);
       return { buffer, mimeType };
     }
   }
 
   /**
-   * Ajuste Fino Manual:
-   * Remove uma porcentagem da base para elevar o posicionamento do rosto no card.
-   * Utiliza escala decimal (float) para evitar erros de transformação no Cloudinary.
+   * ===============================
+   * 🟨 AJUSTE FINO MANUAL (ADMIN)
+   * Eleva rosto cortando base
+   * ===============================
    */
-  async processWithManualAdjustment(buffer: Buffer, verticalCutPct: number): Promise<ProcessedImage> {
-    this.logger.debug(`Executando ajuste manual: Cortando ${verticalCutPct}% da base para elevar o rosto.`);
+  async processWithManualAdjustment(
+    buffer: Buffer,
+    verticalCutPct: number,
+  ): Promise<ProcessedImage> {
+    this.logger.debug(
+      `Ajuste manual: cortando ${verticalCutPct}% da base (admin only)`,
+    );
 
     try {
-      // Cálculo da escala decimal (ex: 10% de corte na base mantém 0.9 da altura do topo)
       const heightScale = (100 - verticalCutPct) / 100;
 
       return new Promise((resolve, reject) => {
@@ -61,43 +67,43 @@ export class ProcessorService {
           {
             folder: 'provider_avatars_processed',
             transformation: [
-              /**
-               * 1. CORTA A BASE (Vertical Crop)
-               * Usamos decimais (ex: 0.9) para garantir que o Cloudinary entenda como % da imagem original.
-               * gravity: 'north' mantém o topo e corta o que sobra embaixo.
-               */
-              { 
-                height: heightScale, 
-                width: 1.0, 
-                crop: "crop", 
-                gravity: "north" 
+              // 1️⃣ Corta base mantendo topo
+              {
+                height: heightScale,
+                width: 1.0,
+                crop: 'crop',
+                gravity: 'north',
               },
 
-              // 2. PADRONIZAÇÃO 3x4 FINAL
-              { width: 800, height: 1000, crop: "fill" },
+              // 2️⃣ Padroniza 1:1 (avatar público)
+              { width: 800, height: 800, crop: 'fill', gravity: 'face' },
 
-              // 3. TRATAMENTO DE IMAGEM (Removido 'warm' que causava erro)
-              { effect: "improve:indoor" },
-              { effect: "gamma:20" },
-              { effect: "vibrance:30" }, 
-              { effect: "sharpen:100" },
-              { fetch_format: 'jpg', quality: 'auto:good' }
+              // 3️⃣ Tratamento premium leve
+              { effect: 'improve:indoor' },
+              { effect: 'gamma:15' },
+              { effect: 'vibrance:18' },
+              { effect: 'sharpen:60' },
+
+              { fetch_format: 'jpg', quality: 'auto:good' },
             ],
           },
           async (error, result) => {
             if (error) {
-              this.logger.error(`Erro detalhado Cloudinary: ${error.message}`);
+              this.logger.error(`Erro Cloudinary (manual): ${error.message}`);
               return reject(error);
             }
-            
+
             try {
-              const response = await axios.get(result!.secure_url, { responseType: 'arraybuffer' });
+              const response = await axios.get(result!.secure_url, {
+                responseType: 'arraybuffer',
+              });
+
               resolve({
                 buffer: Buffer.from(response.data),
                 mimeType: 'image/jpeg',
               });
-            } catch (axiosError) {
-              reject(axiosError);
+            } catch (err) {
+              reject(err);
             }
           },
         );
@@ -105,35 +111,54 @@ export class ProcessorService {
         uploadStream.end(buffer);
       });
     } catch (error: any) {
-      this.logger.error(`Erro no ajuste manual: ${error.message}`);
+      this.logger.error(`Erro ajuste manual: ${error.message}`);
       return { buffer, mimeType: 'image/jpeg' };
     }
   }
 
-  private async enhanceRealPhoto(imageBuffer: Buffer): Promise<string> {
+  /**
+   * ===============================
+   * 🟦 AVATAR PÚBLICO – PIPELINE
+   * ===============================
+   */
+  private async enhancePublicAvatar(imageBuffer: Buffer): Promise<string> {
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
-          folder: 'provider_avatars_processed',
+          folder: 'provider_avatars_public',
           transformation: [
             /**
-             * 1. ENQUADRAMENTO PROFISSIONAL (3x4)
-             * zoom: 0.65 garante os ombros no enquadramento.
+             * 1️⃣ Enquadramento profissional
+             * - 1:1
+             * - Rosto central
+             * - Ombros visíveis
              */
-            { width: 800, height: 1000, crop: 'thumb', gravity: 'face', zoom: 0.65 },
+            {
+              width: 800,
+              height: 800,
+              crop: 'thumb',
+              gravity: 'face',
+              zoom: 0.55,
+            },
 
             /**
-             * 2. TRATAMENTO DE LUZ E COR (Ajustado para evitar efeitos inválidos)
+             * 2️⃣ (Opcional) Fundo controlado
+             * 👉 descomenta quando quiser ativar
              */
-            { effect: "improve:indoor" },
-            { effect: "gamma:20" },
-            { effect: "vibrance:25" },
-            { effect: "sharpen:100" },
+            // { background: '#f2f6fb', crop: 'pad' },
 
             /**
-             * 3. FORMATO FINAL
+             * 3️⃣ Tratamento premium (natural)
              */
-            { fetch_format: 'jpg', quality: 'auto:good' }
+            { effect: 'improve:indoor' },
+            { effect: 'gamma:15' },
+            { effect: 'vibrance:18' },
+            { effect: 'sharpen:60' },
+
+            /**
+             * 4️⃣ Output final
+             */
+            { fetch_format: 'jpg', quality: 'auto:good' },
           ],
         },
         (error, result) => {
@@ -144,5 +169,54 @@ export class ProcessorService {
 
       uploadStream.end(imageBuffer);
     });
+  }
+
+  /**
+   * ===============================
+   * 🟨 IDENTIDADE REAL (3x4 – KYC)
+   * Documento / verificação
+   * ===============================
+   */
+  async processIdentity3x4(buffer: Buffer): Promise<ProcessedImage> {
+    this.logger.debug('Processando imagem de identidade (3x4)');
+
+    try {
+      const url = await new Promise<string>((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: 'provider_identity',
+            transformation: [
+              {
+                width: 800,
+                height: 1000,
+                crop: 'thumb',
+                gravity: 'face',
+                zoom: 0.6,
+              },
+              { effect: 'improve:indoor' },
+              { effect: 'gamma:15' },
+              { effect: 'sharpen:60' },
+              { fetch_format: 'jpg', quality: 'auto:good' },
+            ],
+          },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result!.secure_url);
+          },
+        );
+
+        uploadStream.end(buffer);
+      });
+
+      const response = await axios.get(url, { responseType: 'arraybuffer' });
+
+      return {
+        buffer: Buffer.from(response.data),
+        mimeType: 'image/jpeg',
+      };
+    } catch (error: any) {
+      this.logger.error(`Erro identidade 3x4: ${error.message}`);
+      return { buffer, mimeType: 'image/jpeg' };
+    }
   }
 }
