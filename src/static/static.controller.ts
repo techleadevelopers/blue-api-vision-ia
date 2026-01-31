@@ -6,53 +6,54 @@ import { join } from 'path';
 export class StaticController {
   private readonly verificationText =
     'tiktok-developers-site-verification=bmZ61saa2BBAvaplPFnhMW8MSI2x0AoG';
+  private readonly verificationFile = 'tiktokbmZ61saa2BBAvaplPFnhMW8MSI2x0AoG.txt';
 
-  // GET/HEAD root
-  @Get(':file(tiktok.*\\.txt)')
-  getTikTok(@Param('file') _file: string, @Res() res: Response) {
+  // Root - explicit paths (GET/HEAD) with and without trailing slash
+  @Get('tiktokbmZ61saa2BBAvaplPFnhMW8MSI2x0AoG.txt')
+  getTikTok(@Res() res: Response) {
     res.type('text/plain');
     return res.send(this.verificationText);
   }
 
-  @Get(':file(tiktok.*\\.txt)/')
-  getTikTokSlash(@Param('file') _file: string, @Res() res: Response) {
+  @Get('tiktokbmZ61saa2BBAvaplPFnhMW8MSI2x0AoG.txt/')
+  getTikTokSlash(@Res() res: Response) {
     res.type('text/plain');
     return res.send(this.verificationText);
   }
 
-  @Head(':file(tiktok.*\\.txt)')
-  headTikTok(@Param('file') _file: string, @Res() res: Response) {
+  @Head('tiktokbmZ61saa2BBAvaplPFnhMW8MSI2x0AoG.txt')
+  headTikTok(@Res() res: Response) {
     res.type('text/plain');
     return res.send(this.verificationText);
   }
 
-  @Head(':file(tiktok.*\\.txt)/')
-  headTikTokSlash(@Param('file') _file: string, @Res() res: Response) {
+  @Head('tiktokbmZ61saa2BBAvaplPFnhMW8MSI2x0AoG.txt/')
+  headTikTokSlash(@Res() res: Response) {
     res.type('text/plain');
     return res.send(this.verificationText);
   }
 
-  // GET/HEAD under /terms
-  @Get('terms/:file(tiktok.*\\.txt)')
-  getTikTokTerms(@Param('file') _file: string, @Res() res: Response) {
+  // Under /terms - explicit paths
+  @Get('terms/tiktokbmZ61saa2BBAvaplPFnhMW8MSI2x0AoG.txt')
+  getTikTokTerms(@Res() res: Response) {
     res.type('text/plain');
     return res.send(this.verificationText);
   }
 
-  @Get('terms/:file(tiktok.*\\.txt)/')
-  getTikTokTermsSlash(@Param('file') _file: string, @Res() res: Response) {
+  @Get('terms/tiktokbmZ61saa2BBAvaplPFnhMW8MSI2x0AoG.txt/')
+  getTikTokTermsSlash(@Res() res: Response) {
     res.type('text/plain');
     return res.send(this.verificationText);
   }
 
-  @Head('terms/:file(tiktok.*\\.txt)')
-  headTikTokTerms(@Param('file') _file: string, @Res() res: Response) {
+  @Head('terms/tiktokbmZ61saa2BBAvaplPFnhMW8MSI2x0AoG.txt')
+  headTikTokTerms(@Res() res: Response) {
     res.type('text/plain');
     return res.send(this.verificationText);
   }
 
-  @Head('terms/:file(tiktok.*\\.txt)/')
-  headTikTokTermsSlash(@Param('file') _file: string, @Res() res: Response) {
+  @Head('terms/tiktokbmZ61saa2BBAvaplPFnhMW8MSI2x0AoG.txt/')
+  headTikTokTermsSlash(@Res() res: Response) {
     res.type('text/plain');
     return res.send(this.verificationText);
   }
