@@ -22,8 +22,10 @@ export class StaticController {
   // Rota explícita para verificação do TikTok no caminho raiz
   @Get('tiktok9DJJtMAHBJYGN75iA8AnT163uOLbWa7f.txt')
   getTikTokVerification(@Res() res: Response) {
-    return res.sendFile(
-      join(__dirname, '..', 'static', 'tiktok9DJJtMAHBJYGN75iA8AnT163uOLbWa7f.txt'),
+    // Responde inline para evitar dependência de arquivo no build
+    res.type('text/plain');
+    return res.send(
+      'tiktok-developers-site-verification=9DJJtMAHBJYGN75iA8AnT163uOLbWa7f',
     );
   }
 }
