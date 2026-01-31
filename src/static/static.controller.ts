@@ -7,27 +7,52 @@ export class StaticController {
   private readonly verificationText =
     'tiktok-developers-site-verification=bmZ61saa2BBAvaplPFnhMW8MSI2x0AoG';
 
-  // Atende qualquer arquivo tiktok*.txt (com ou sem barra final) em GET/HEAD
+  // GET/HEAD root
   @Get(':file(tiktok.*\\.txt)')
-  getTikTokVerification(@Param('file') _file: string, @Res() res: Response) {
+  getTikTok(@Param('file') _file: string, @Res() res: Response) {
     res.type('text/plain');
     return res.send(this.verificationText);
   }
 
   @Get(':file(tiktok.*\\.txt)/')
-  getTikTokVerificationSlash(@Param('file') _file: string, @Res() res: Response) {
+  getTikTokSlash(@Param('file') _file: string, @Res() res: Response) {
     res.type('text/plain');
     return res.send(this.verificationText);
   }
 
   @Head(':file(tiktok.*\\.txt)')
-  headTikTokVerification(@Param('file') _file: string, @Res() res: Response) {
+  headTikTok(@Param('file') _file: string, @Res() res: Response) {
     res.type('text/plain');
     return res.send(this.verificationText);
   }
 
   @Head(':file(tiktok.*\\.txt)/')
-  headTikTokVerificationSlash(@Param('file') _file: string, @Res() res: Response) {
+  headTikTokSlash(@Param('file') _file: string, @Res() res: Response) {
+    res.type('text/plain');
+    return res.send(this.verificationText);
+  }
+
+  // GET/HEAD under /terms
+  @Get('terms/:file(tiktok.*\\.txt)')
+  getTikTokTerms(@Param('file') _file: string, @Res() res: Response) {
+    res.type('text/plain');
+    return res.send(this.verificationText);
+  }
+
+  @Get('terms/:file(tiktok.*\\.txt)/')
+  getTikTokTermsSlash(@Param('file') _file: string, @Res() res: Response) {
+    res.type('text/plain');
+    return res.send(this.verificationText);
+  }
+
+  @Head('terms/:file(tiktok.*\\.txt)')
+  headTikTokTerms(@Param('file') _file: string, @Res() res: Response) {
+    res.type('text/plain');
+    return res.send(this.verificationText);
+  }
+
+  @Head('terms/:file(tiktok.*\\.txt)/')
+  headTikTokTermsSlash(@Param('file') _file: string, @Res() res: Response) {
     res.type('text/plain');
     return res.send(this.verificationText);
   }
