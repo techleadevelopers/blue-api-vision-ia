@@ -14,12 +14,12 @@ import { StaticController } from './static/static.controller';
 @Module({
   imports: [
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, 'static'),
+      rootPath: join(__dirname, '..', 'static'),
       renderPath: '/terms',
       serveRoot: '/terms',
     }),
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, 'static'),
+      rootPath: join(__dirname, '..', 'static'),
       renderPath: '/privacy',
       serveRoot: '/privacy',
     }),
