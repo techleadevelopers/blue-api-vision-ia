@@ -1,9 +1,10 @@
-import { BadRequestException, Controller, Get, Query, Res } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Query, Res, Logger } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import type { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
   constructor(private readonly service: AuthService) {}
 
   @Get('tiktok')
@@ -13,11 +14,17 @@ export class AuthController {
   }
 
   @Get('tiktok/callback')
-  async tiktokCallback(
-    @Query('code') code?: string,
-    @Query('state') state?: string,
-  ) {
-    if (!code) throw new BadRequestException('Missing code');
+  async tiktokCallback(@Query() query: Record<string, string>) {
+    const code = query.code || query.auth_code;
+    const state = query.state || query.oauth_state;
+
+    this.logger.debug(`TikTok callback query: ${JSON.stringify(query)}`);
+
+    if (!code) {
+      throw new BadRequestException(
+        `Missing code in callback. Received query: ${JSON.stringify(query)}`,
+      );
+    }
     return this.service.exchangeTikTokCode(code, state);
   }
 }
