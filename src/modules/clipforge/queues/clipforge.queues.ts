@@ -1,10 +1,11 @@
+// BullMQ (v5) não aceita ':' no nome da fila; usamos underscores.
 export const CLIPFORGE_QUEUES = {
-  SCRIPT_GENERATE: 'clipforge:script.generate',
-  TTS_GENERATE: 'clipforge:tts.generate',
-  VIDEO_RENDER: 'clipforge:video.render',
-  POST_QUEUE: 'clipforge:post.queue',
-  METRICS_PULL: 'clipforge:metrics.pull',
-  DEADLETTER: 'clipforge:deadletter',
+  SCRIPT_GENERATE: 'clipforge_script_generate',
+  TTS_GENERATE: 'clipforge_tts_generate',
+  VIDEO_RENDER: 'clipforge_video_render',
+  POST_QUEUE: 'clipforge_post_queue',
+  METRICS_PULL: 'clipforge_metrics_pull',
+  DEADLETTER: 'clipforge_deadletter',
 } as const;
 
 export type ClipforgeQueueName =
