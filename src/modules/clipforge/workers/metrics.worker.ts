@@ -1,18 +1,21 @@
-import { Process, Processor } from '@nestjs/bullmq';
+import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { ClipforgeService } from '../clipforge.service';
 import { CLIPFORGE_QUEUES } from '../queues/clipforge.queues';
 import { ENV } from '../../../config/env.config';
 import { Logger } from '@nestjs/common';
 
-@Processor(CLIPFORGE_QUEUES.METRICS_PULL)
-export class MetricsWorker {
+@Processor(CLIPFORGE_QUEUES.METRICS_PULL, {
+  concurrency: ENV.CLIPFORGE_CONCURRENCY.METRICS,
+})
+export class MetricsWorker extends WorkerHost {
   private readonly logger = new Logger(MetricsWorker.name);
 
-  constructor(private readonly clipforge: ClipforgeService) {}
+  constructor(private readonly clipforge: ClipforgeService) {
+    super();
+  }
 
-  @Process({ name: 'metrics.pull', concurrency: ENV.CLIPFORGE_CONCURRENCY.METRICS })
-  async handle(job: Job<{ postId: string; rangeDays?: number }>) {
+  async process(job: Job<{ postId: string; rangeDays?: number }>) {
     try {
       // TODO: buscar métricas na plataforma e persistir no repositório/Prisma
       this.logger.debug(
