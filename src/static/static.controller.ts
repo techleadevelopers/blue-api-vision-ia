@@ -5,17 +5,17 @@ import { join } from 'path';
 @Controller()
 export class StaticController {
   private readonly verificationText =
-    'tiktok-developers-site-verification=lyuuCaAPpEkg7jvhNZ0m2SZkLJRG7UVW';
+    'tiktok-developers-site-verification=h522Xo7riD4hTB6UjSIlozlpW9WQQQMZ';
 
   // Rota explícita para verificação do TikTok no caminho raiz
-  @Get('tiktok9DJJtMAHBJYGN75iA8AnT163uOLbWa7f.txt')
+  @Get('tiktokh522Xo7riD4hTB6UjSIlozlpW9WQQQMZ.txt')
   getTikTokVerification(@Res() res: Response) {
     res.type('text/plain');
     return res.send(this.verificationText);
   }
 
   // Suporta barra final que alguns validadores adicionam
-  @Get('tiktok9DJJtMAHBJYGN75iA8AnT163uOLbWa7f.txt/')
+  @Get('tiktokh522Xo7riD4hTB6UjSIlozlpW9WQQQMZ.txt/')
   getTikTokVerificationSlash(@Res() res: Response) {
     res.type('text/plain');
     return res.send(this.verificationText);
