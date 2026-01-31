@@ -7,18 +7,16 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
-import { Queue, JobsOptions, JobStatus as BullJobStatus } from 'bullmq';
+import { Queue, JobsOptions } from 'bullmq';
 import { CLIPFORGE_QUEUES, ClipforgeQueueName } from './queues/clipforge.queues';
-import {
-  ClipforgeRepository,
-  CLIPFORGE_REPOSITORY,
-} from './domain/clipforge.repository';
+import { CLIPFORGE_REPOSITORY } from './domain/clipforge.repository';
+import type { ClipforgeRepository } from './domain/clipforge.repository';
 import { ContentJob, JobStatus } from './domain/job/job.model';
 import { ENV } from '../../config/env.config';
 
-export interface GenerateRequestDto {
-  accountId: string;
-  themeId: string;
+export class GenerateRequestDto {
+  accountId!: string;
+  themeId!: string;
   hook?: string;
   template?: string;
   voice?: string;
@@ -113,7 +111,7 @@ export class ClipforgeService implements OnModuleInit, OnModuleDestroy {
 
   async listQueues() {
     const queues = this.getQueues();
-    const result = [];
+    const result: { name: ClipforgeQueueName; counts: Record<string, number> }[] = [];
     for (const { name, queue } of queues) {
       const counts = await queue.getJobCounts(
         'waiting',
@@ -127,24 +125,24 @@ export class ClipforgeService implements OnModuleInit, OnModuleDestroy {
     return result;
   }
 
-  async pauseQueue(name: ClipforgeQueueName) {
+  async pauseQueue(name: string) {
     const queue = this.getQueueByName(name);
     await queue.pause();
   }
 
-  async resumeQueue(name: ClipforgeQueueName) {
+  async resumeQueue(name: string) {
     const queue = this.getQueueByName(name);
     await queue.resume();
   }
 
   async listJobs(params: {
-    queue?: ClipforgeQueueName;
-    status?: BullJobStatus | 'failed' | 'completed' | 'waiting';
+    queue?: string;
+    status?: 'waiting' | 'active' | 'completed' | 'failed' | 'delayed';
   }) {
     if (params.queue) {
       const queue = this.getQueueByName(params.queue);
       const status = params.status || 'waiting';
-      return queue.getJobs([status as BullJobStatus], 0, 50);
+      return queue.getJobs([status], 0, 50);
     }
     return this.repository.listJobs();
   }
@@ -154,10 +152,7 @@ export class ClipforgeService implements OnModuleInit, OnModuleDestroy {
   }
 
   async listPosts(accountId?: string, range?: number) {
-    return this.repository.listPosts({
-      accountId,
-      rangeDays: range,
-    });
+    return this.repository.listPosts({ accountId, rangeDays: range });
   }
 
   async listInsights(range?: number) {
@@ -196,7 +191,7 @@ export class ClipforgeService implements OnModuleInit, OnModuleDestroy {
   }
 
   async enqueueMetricsForRecentPosts(rangeDays = 7) {
-    const posts = await this.repository.listPosts(undefined, rangeDays);
+    const posts = await this.repository.listPosts({ rangeDays });
     for (const post of posts) {
       await this.metricsQueue.add(
         'metrics.pull',
@@ -222,7 +217,7 @@ export class ClipforgeService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private getQueueByName(name: ClipforgeQueueName): Queue {
+  private getQueueByName(name: string): Queue {
     const match = this.getQueues().find((q) => q.name === name);
     if (!match) throw new NotFoundException(`Queue ${name} not registered`);
     return match.queue;
