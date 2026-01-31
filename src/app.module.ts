@@ -17,11 +17,13 @@ import { StaticController } from './static/static.controller';
       rootPath: join(__dirname, '..', 'static'),
       renderPath: '/terms',
       serveRoot: '/terms',
+      exclude: ['/tiktok9DJJtMAHBJYGN75iA8AnT163uOLbWa7f.txt'],
     }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'static'),
       renderPath: '/privacy',
       serveRoot: '/privacy',
+      exclude: ['/tiktok9DJJtMAHBJYGN75iA8AnT163uOLbWa7f.txt'],
     }),
     ProcessorModule,
     StorageModule,
