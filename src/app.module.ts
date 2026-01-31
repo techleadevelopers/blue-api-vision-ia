@@ -6,6 +6,7 @@ import { StorageModule } from './storage/storage.module';
 import { VisionOcrModule } from './vision/ocr/vision-ocr.module';
 import { VisionIdentityCheckModule } from './vision/identity-check/vision-identity-check.module';
 import { ClipforgeModule } from './modules/clipforge/clipforge.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { ClipforgeModule } from './modules/clipforge/clipforge.module';
     VisionOcrModule,
     VisionIdentityCheckModule,
     ClipforgeModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
