@@ -10,6 +10,7 @@ export class AuthService {
     if (!TIKTOK_AUTH_URL || !TIKTOK_CLIENT_ID || !TIKTOK_REDIRECT_URI) {
       throw new InternalServerErrorException('TikTok OAuth not configured');
     }
+    const base = TIKTOK_AUTH_URL.replace(/\/+$/, ''); // remove barra final
     const params = new URLSearchParams({
       client_key: TIKTOK_CLIENT_ID,
       response_type: 'code',
@@ -17,7 +18,7 @@ export class AuthService {
       redirect_uri: TIKTOK_REDIRECT_URI,
       state: Math.random().toString(36).slice(2),
     });
-    return `${TIKTOK_AUTH_URL}?${params.toString()}`;
+    return `${base}?${params.toString()}`;
   }
 
   async exchangeTikTokCode(code: string, state?: string) {
