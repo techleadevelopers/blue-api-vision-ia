@@ -20,6 +20,9 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@nestjs/serve-static": ["node_modules/@nestjs/serve-static/index.d.ts"]
+    }
   }
 }
