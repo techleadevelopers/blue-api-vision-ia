@@ -5,29 +5,29 @@ import { join } from 'path';
 @Controller()
 export class StaticController {
   private readonly verificationText =
-    'tiktok-developers-site-verification=lyuuCaAPpEkg7jvhNZ0m2SZkLJRG7UVW';
-  private readonly verificationPath = 'tiktok9DJJtMAHBJYGN75iA8AnT163uOLbWa7f.txt';
+    'tiktok-developers-site-verification=bmZ61saa2BBAvaplPFnhMW8MSI2x0AoG';
 
-  @Get('tiktok9DJJtMAHBJYGN75iA8AnT163uOLbWa7f.txt')
-  getTikTokVerification(@Res() res: Response) {
+  // Atende qualquer arquivo tiktok*.txt (com ou sem barra final) em GET/HEAD
+  @Get(':file(tiktok.*\\.txt)')
+  getTikTokVerification(@Param('file') _file: string, @Res() res: Response) {
     res.type('text/plain');
     return res.send(this.verificationText);
   }
 
-  @Get('tiktok9DJJtMAHBJYGN75iA8AnT163uOLbWa7f.txt/')
-  getTikTokVerificationSlash(@Res() res: Response) {
+  @Get(':file(tiktok.*\\.txt)/')
+  getTikTokVerificationSlash(@Param('file') _file: string, @Res() res: Response) {
     res.type('text/plain');
     return res.send(this.verificationText);
   }
 
-  @Head('tiktok9DJJtMAHBJYGN75iA8AnT163uOLbWa7f.txt')
-  headTikTokVerification(@Res() res: Response) {
+  @Head(':file(tiktok.*\\.txt)')
+  headTikTokVerification(@Param('file') _file: string, @Res() res: Response) {
     res.type('text/plain');
     return res.send(this.verificationText);
   }
 
-  @Head('tiktok9DJJtMAHBJYGN75iA8AnT163uOLbWa7f.txt/')
-  headTikTokVerificationSlash(@Res() res: Response) {
+  @Head(':file(tiktok.*\\.txt)/')
+  headTikTokVerificationSlash(@Param('file') _file: string, @Res() res: Response) {
     res.type('text/plain');
     return res.send(this.verificationText);
   }
