@@ -1,4 +1,4 @@
-import { Process, Processor } from '@nestjs/bullmq';
+import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { CLIPFORGE_QUEUES } from '../queues/clipforge.queues';
 import { ClipforgeService } from '../clipforge.service';
@@ -6,15 +6,18 @@ import { JobStatus } from '../domain/job/job.model';
 import { ENV } from '../../../config/env.config';
 import { RenderService } from '../ffmpeg/render.service';
 
-@Processor(CLIPFORGE_QUEUES.VIDEO_RENDER)
-export class RenderWorker {
+@Processor(CLIPFORGE_QUEUES.VIDEO_RENDER, {
+  concurrency: ENV.CLIPFORGE_CONCURRENCY.RENDER,
+})
+export class RenderWorker extends WorkerHost {
   constructor(
     private readonly clipforge: ClipforgeService,
     private readonly renderService: RenderService,
-  ) {}
+  ) {
+    super();
+  }
 
-  @Process({ name: 'video.render', concurrency: ENV.CLIPFORGE_CONCURRENCY.RENDER })
-  async handle(job: Job<{ jobId: string; payload: Record<string, unknown> }>) {
+  async process(job: Job<{ jobId: string; payload: Record<string, unknown> }>) {
     try {
       const result = await this.renderService.renderVideo(job.data.payload);
       const nextStatus =
