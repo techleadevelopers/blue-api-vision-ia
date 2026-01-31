@@ -19,6 +19,9 @@ import { StaticController } from './static/static.controller';
       serveRoot: '/terms',
       exclude: [
         '/tiktokbmZ61saa2BBAvaplPFnhMW8MSI2x0AoG.txt',
+        '/tiktokbmZ61saa2BBAvaplPFnhMW8MSI2x0AoG.txt/',
+        '/terms/tiktokbmZ61saa2BBAvaplPFnhMW8MSI2x0AoG.txt',
+        '/terms/tiktokbmZ61saa2BBAvaplPFnhMW8MSI2x0AoG.txt/',
       ],
     }),
     ServeStaticModule.forRoot({
@@ -26,8 +29,10 @@ import { StaticController } from './static/static.controller';
       renderPath: '/privacy',
       serveRoot: '/privacy',
       exclude: [
+        '/tiktokbmZ61saa2BBAvaplPFnhMW8MSI2x0AoG.txt',
         '/tiktokbmZ61saa2BBAvaplPFnhMW8MSI2x0AoG.txt/',
-
+        '/terms/tiktokbmZ61saa2BBAvaplPFnhMW8MSI2x0AoG.txt',
+        '/terms/tiktokbmZ61saa2BBAvaplPFnhMW8MSI2x0AoG.txt/',
       ],
     }),
     ProcessorModule,
