@@ -18,4 +18,12 @@ export class StaticController {
   getTermsFile(@Param('file') file: string, @Res() res: Response) {
     return res.sendFile(join(__dirname, '..', 'static', file));
   }
+
+  // Rota explícita para verificação do TikTok no caminho raiz
+  @Get('tiktok9DJJtMAHBJYGN75iA8AnT163uOLbWa7f.txt')
+  getTikTokVerification(@Res() res: Response) {
+    return res.sendFile(
+      join(__dirname, '..', 'static', 'tiktok9DJJtMAHBJYGN75iA8AnT163uOLbWa7f.txt'),
+    );
+  }
 }
