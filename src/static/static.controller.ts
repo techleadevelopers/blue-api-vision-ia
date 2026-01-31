@@ -4,58 +4,114 @@ import { join } from 'path';
 
 @Controller()
 export class StaticController {
-  private readonly verificationText =
+  // Token já verificado (terms)
+  private readonly verificationTextOld =
     'tiktok-developers-site-verification=bmZ61saa2BBAvaplPFnhMW8MSI2x0AoG';
-  private readonly verificationFile = 'tiktokbmZ61saa2BBAvaplPFnhMW8MSI2x0AoG.txt';
+  private readonly verificationFileOld = 'tiktokbmZ61saa2BBAvaplPFnhMW8MSI2x0AoG.txt';
+
+  // Novo token gerado para /privacy
+  private readonly verificationTextNew =
+    'tiktok-developers-site-verification=psVcMW2vkFEm3rVco3YeAU8iJxOQXDK2';
+  private readonly verificationFileNew = 'tiktokpsVcMW2vkFEm3rVco3YeAU8iJxOQXDK2.txt';
 
   // Root - explicit paths (GET/HEAD) with and without trailing slash
   @Get('tiktokbmZ61saa2BBAvaplPFnhMW8MSI2x0AoG.txt')
   getTikTok(@Res() res: Response) {
     res.type('text/plain');
-    return res.send(this.verificationText);
+    return res.send(this.verificationTextOld);
   }
 
   @Get('tiktokbmZ61saa2BBAvaplPFnhMW8MSI2x0AoG.txt/')
   getTikTokSlash(@Res() res: Response) {
     res.type('text/plain');
-    return res.send(this.verificationText);
+    return res.send(this.verificationTextOld);
   }
 
   @Head('tiktokbmZ61saa2BBAvaplPFnhMW8MSI2x0AoG.txt')
   headTikTok(@Res() res: Response) {
     res.type('text/plain');
-    return res.send(this.verificationText);
+    return res.send(this.verificationTextOld);
   }
 
   @Head('tiktokbmZ61saa2BBAvaplPFnhMW8MSI2x0AoG.txt/')
   headTikTokSlash(@Res() res: Response) {
     res.type('text/plain');
-    return res.send(this.verificationText);
+    return res.send(this.verificationTextOld);
+  }
+
+  // Novo token na raiz
+  @Get('tiktokpsVcMW2vkFEm3rVco3YeAU8iJxOQXDK2.txt')
+  getTikTokNew(@Res() res: Response) {
+    res.type('text/plain');
+    return res.send(this.verificationTextNew);
+  }
+
+  @Get('tiktokpsVcMW2vkFEm3rVco3YeAU8iJxOQXDK2.txt/')
+  getTikTokNewSlash(@Res() res: Response) {
+    res.type('text/plain');
+    return res.send(this.verificationTextNew);
+  }
+
+  @Head('tiktokpsVcMW2vkFEm3rVco3YeAU8iJxOQXDK2.txt')
+  headTikTokNew(@Res() res: Response) {
+    res.type('text/plain');
+    return res.send(this.verificationTextNew);
+  }
+
+  @Head('tiktokpsVcMW2vkFEm3rVco3YeAU8iJxOQXDK2.txt/')
+  headTikTokNewSlash(@Res() res: Response) {
+    res.type('text/plain');
+    return res.send(this.verificationTextNew);
   }
 
   // Under /terms - explicit paths
   @Get('terms/tiktokbmZ61saa2BBAvaplPFnhMW8MSI2x0AoG.txt')
   getTikTokTerms(@Res() res: Response) {
     res.type('text/plain');
-    return res.send(this.verificationText);
+    return res.send(this.verificationTextOld);
   }
 
   @Get('terms/tiktokbmZ61saa2BBAvaplPFnhMW8MSI2x0AoG.txt/')
   getTikTokTermsSlash(@Res() res: Response) {
     res.type('text/plain');
-    return res.send(this.verificationText);
+    return res.send(this.verificationTextOld);
   }
 
   @Head('terms/tiktokbmZ61saa2BBAvaplPFnhMW8MSI2x0AoG.txt')
   headTikTokTerms(@Res() res: Response) {
     res.type('text/plain');
-    return res.send(this.verificationText);
+    return res.send(this.verificationTextOld);
   }
 
   @Head('terms/tiktokbmZ61saa2BBAvaplPFnhMW8MSI2x0AoG.txt/')
   headTikTokTermsSlash(@Res() res: Response) {
     res.type('text/plain');
-    return res.send(this.verificationText);
+    return res.send(this.verificationTextOld);
+  }
+
+  // Novo token em /privacy (prefixo usado na verificação nova)
+  @Get('privacy/tiktokpsVcMW2vkFEm3rVco3YeAU8iJxOQXDK2.txt')
+  getTikTokPrivacy(@Res() res: Response) {
+    res.type('text/plain');
+    return res.send(this.verificationTextNew);
+  }
+
+  @Get('privacy/tiktokpsVcMW2vkFEm3rVco3YeAU8iJxOQXDK2.txt/')
+  getTikTokPrivacySlash(@Res() res: Response) {
+    res.type('text/plain');
+    return res.send(this.verificationTextNew);
+  }
+
+  @Head('privacy/tiktokpsVcMW2vkFEm3rVco3YeAU8iJxOQXDK2.txt')
+  headTikTokPrivacy(@Res() res: Response) {
+    res.type('text/plain');
+    return res.send(this.verificationTextNew);
+  }
+
+  @Head('privacy/tiktokpsVcMW2vkFEm3rVco3YeAU8iJxOQXDK2.txt/')
+  headTikTokPrivacySlash(@Res() res: Response) {
+    res.type('text/plain');
+    return res.send(this.verificationTextNew);
   }
 
   @Get('terms')
