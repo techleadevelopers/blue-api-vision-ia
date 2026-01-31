@@ -10,7 +10,6 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ClipforgeService, GenerateRequestDto } from './clipforge.service';
-import { CLIPFORGE_QUEUES, ClipforgeQueueName } from './queues/clipforge.queues';
 import { ENV } from '../../config/env.config';
 
 @Controller('api')
@@ -49,7 +48,7 @@ export class ClipforgeController {
 
   @Post('queues/:name/pause')
   pauseQueue(
-    @Param('name') name: ClipforgeQueueName,
+    @Param('name') name: string,
     @Headers('x-admin-token') admin: string,
   ) {
     this.ensureAdmin(admin);
@@ -58,7 +57,7 @@ export class ClipforgeController {
 
   @Post('queues/:name/resume')
   resumeQueue(
-    @Param('name') name: ClipforgeQueueName,
+    @Param('name') name: string,
     @Headers('x-admin-token') admin: string,
   ) {
     this.ensureAdmin(admin);
@@ -67,7 +66,7 @@ export class ClipforgeController {
 
   @Get('jobs')
   listJobs(
-    @Query('queue') queue?: ClipforgeQueueName,
+    @Query('queue') queue?: string,
     @Query('status') status?: string,
     @Headers('x-admin-token') admin?: string,
   ) {
