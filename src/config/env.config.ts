@@ -28,4 +28,10 @@ export const ENV = {
     POST: Number(process.env.CLIPFORGE_POST_CONCURRENCY || 2),
     METRICS: Number(process.env.CLIPFORGE_METRICS_CONCURRENCY || 2),
   },
+  OAUTH: {
+    TIKTOK_CLIENT_ID: process.env.TIKTOK_CLIENT_ID,
+    TIKTOK_CLIENT_SECRET: process.env.TIKTOK_CLIENT_SECRET,
+    TIKTOK_AUTH_URL: process.env.TIKTOK_AUTH_URL,
+    TIKTOK_REDIRECT_URI: process.env.TIKTOK_REDIRECT_URI,
+  },
 };
