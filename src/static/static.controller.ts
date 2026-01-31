@@ -14,6 +14,11 @@ export class StaticController {
     'tiktok-developers-site-verification=psVcMW2vkFEm3rVco3YeAU8iJxOQXDK2';
   private readonly verificationFileNew = 'tiktokpsVcMW2vkFEm3rVco3YeAU8iJxOQXDK2.txt';
 
+  // Token para domínio raíz (Web/Desktop URL)
+  private readonly verificationTextRoot =
+    'tiktok-developers-site-verification=vE1f4utB3twK8PgE0ZmVaJTVXjuNFbxQ';
+  private readonly verificationFileRoot = 'tiktokvE1f4utB3twK8PgE0ZmVaJTVXjuNFbxQ.txt';
+
   // Root - explicit paths (GET/HEAD) with and without trailing slash
   @Get('tiktokbmZ61saa2BBAvaplPFnhMW8MSI2x0AoG.txt')
   getTikTok(@Res() res: Response) {
@@ -37,6 +42,31 @@ export class StaticController {
   headTikTokSlash(@Res() res: Response) {
     res.type('text/plain');
     return res.send(this.verificationTextOld);
+  }
+
+  // Novo token na raiz (Web/Desktop URL)
+  @Get('tiktokvE1f4utB3twK8PgE0ZmVaJTVXjuNFbxQ.txt')
+  getTikTokRoot(@Res() res: Response) {
+    res.type('text/plain');
+    return res.send(this.verificationTextRoot);
+  }
+
+  @Get('tiktokvE1f4utB3twK8PgE0ZmVaJTVXjuNFbxQ.txt/')
+  getTikTokRootSlash(@Res() res: Response) {
+    res.type('text/plain');
+    return res.send(this.verificationTextRoot);
+  }
+
+  @Head('tiktokvE1f4utB3twK8PgE0ZmVaJTVXjuNFbxQ.txt')
+  headTikTokRoot(@Res() res: Response) {
+    res.type('text/plain');
+    return res.send(this.verificationTextRoot);
+  }
+
+  @Head('tiktokvE1f4utB3twK8PgE0ZmVaJTVXjuNFbxQ.txt/')
+  headTikTokRootSlash(@Res() res: Response) {
+    res.type('text/plain');
+    return res.send(this.verificationTextRoot);
   }
 
   // Novo token na raiz
